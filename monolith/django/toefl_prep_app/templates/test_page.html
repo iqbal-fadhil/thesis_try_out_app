@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Page{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 style="text-align: center;">Test Page</h1>
+    <div class="card">
+        <div class="card-body">
+            <h2>Time Remaining: <span id="timer" class="text-danger">25:00</span></h2>
+        </div>
+    </div>
+    <div class="card mt-4">
+        <div class="card-body">
+            <h2>Question {{ question.id }}</h2>
+            {% if audio_file %}
+            <audio controls>
+                <source src="{{ audio_file.url }}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            {% endif %}
+            <p>{{ question.question_text|safe }}</p>
+
+            <form method="post" id="testForm" onsubmit="return validateForm()">
+                {% csrf_token %}
+                {% for choice in question.choices.all %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="choice{{ choice.id }}" name="selected_choice" value="{{ choice.id }}">
+                    <label class="form-check-label" for="choice{{ choice.id }}">{{ choice.choice_text }}</label>
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary mt-3">Submit Answer</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function validateForm() {
+        var selectedChoice = document.querySelector('input[name="selected_choice"]:checked');
+        if (!selectedChoice) {
+            alert('Please select an answer.');
+            return false; // Prevent form submission
+        }
+        return true; // Allow form submission
+    }
+</script>
+<!-- Place this script at the bottom of your test_page.html template -->
+<script>
+    // Function to set cookie
+    function setCookie(name, value, days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    }
+
+    // Function to get cookie value
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1, c.length);
+            }
+            if (c.indexOf(nameEQ) == 0) {
+                return c.substring(nameEQ.length, c.length);
+            }
+        }
+        return null;
+    }
+
+    // Check if start time is already set in cookie
+    var startTime = getCookie('testStartTime');
+    if (!startTime) {
+        // Set the start time if not already set
+        startTime = Date.now();
+        setCookie('testStartTime', startTime, 1); // Cookie expires in 1 day
+    } else {
+        startTime = parseInt(startTime);
+    }
+
+    var timer = document.getElementById('timer');
+
+    // Update timer every second
+    var intervalId = setInterval(function() {
+        var currentTime = Date.now();
+        var elapsedTime = currentTime - startTime;
+        var remainingTime = 1500000 - elapsedTime; // 50 minutes in milliseconds
+
+        // Convert remaining time to minutes and seconds
+        var minutes = Math.floor(remainingTime / (1000 * 60));
+        var seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+        // Update the timer display
+        timer.textContent = (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+
+        // Check if time is up
+        if (remainingTime <= 0) {
+            clearInterval(intervalId); // Stop the timer
+            alert("Time's up!"); // Show an alert when time is up
+            // You can optionally submit the form automatically here
+        }
+    }, 1000);
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+{
+    "info": {
+      "name": "TOEFL Microservices",
+      "_postman_id": "abcd1234-5678-9101-1121-314151617181",
+      "description": "API testing for auth_service, user_service, and test_service",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Auth Service",
+        "item": [
+          {
+            "name": "Login",
+            "request": {
+              "method": "POST",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"username\": \"alice\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:8003/api/auth/login",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8003",
+                "path": ["api", "auth", "login"]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Validate Token",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:8003/api/auth/validate?token=YOUR_TOKEN_HERE",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8003",
+                "path": ["api", "auth", "validate"],
+                "query": [
+                  { "key": "token", "value": "YOUR_TOKEN_HERE" }
+                ]
+              }
+            },
+            "response": []
+          }
+        ]
+      },
+      {
+        "name": "User Service",
+        "item": [
+          {
+            "name": "Get User Profile",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:8001/api/user/profile?user_id=1",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8001",
+                "path": ["api", "user", "profile"],
+                "query": [
+                  { "key": "user_id", "value": "1" }
+                ]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Update Score",
+            "request": {
+              "method": "POST",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"user_id\": 1,\n  \"score\": 5\n}"
+              },
+              "url": {
+                "raw": "http://localhost:8001/api/user/update_score",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8001",
+                "path": ["api", "user", "update_score"]
+              }
+            },
+            "response": []
+          }
+        ]
+      },
+      {
+        "name": "Test Service",
+        "item": [
+          {
+            "name": "Get Questions",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:8002/api/test/questions",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8002",
+                "path": ["api", "test", "questions"]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Submit Answers",
+            "request": {
+              "method": "POST",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"user_id\": 1,\n  \"answers\": {\n    \"1\": 2\n  }\n}"
+              },
+              "url": {
+                "raw": "http://localhost:8002/api/test/submit",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8002",
+                "path": ["api", "test", "submit"]
+              }
+            },
+            "response": []
+          }
+        ]
+      }
+    ]
+  }
+  

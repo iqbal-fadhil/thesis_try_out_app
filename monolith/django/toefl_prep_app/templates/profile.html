@@ -1,0 +1,20 @@
+<!-- profile.html -->
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center mb-4">Profile</h2>
+
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Username: {{ user_profile.user.username }}</h5>
+      <p class="card-text">Correct Answers: {{ score }}</p>
+      
+      <a href="{% url 'test_page' question_id=1 %}" class="btn btn-primary">Start Test</a>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,2 @@
+
+[ [0;32m OK [0m ] Ubuntu 22.04 LTS - Configuring package repository to Nevacloud local mirror ☁️ 
