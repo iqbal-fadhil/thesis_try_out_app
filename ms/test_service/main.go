@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 /* ==== DATA TYPES ==== */
@@ -118,41 +118,91 @@ func isValidOption(opt string) bool {
 
 /* ==== DB MIGRATIONS ==== */
 
-func autoMigrate(db *sql.DB) error {
-	stmts := []string{
-		`CREATE TABLE IF NOT EXISTS questions (
-			id SERIAL PRIMARY KEY,
-			question_text TEXT NOT NULL,
-			option_a TEXT,
-			option_b TEXT,
-			option_c TEXT,
-			option_d TEXT,
-			correct_option CHAR(1) NOT NULL CHECK (correct_option IN ('A','B','C','D'))
-		);`,
-		`CREATE TABLE IF NOT EXISTS submissions (
-			id SERIAL PRIMARY KEY,
-			username TEXT NOT NULL,
-			score INTEGER NOT NULL DEFAULT 0,
-			created_at TIMESTAMP NOT NULL DEFAULT NOW()
-		);`,
-		`CREATE TABLE IF NOT EXISTS answers (
-			id SERIAL PRIMARY KEY,
-			submission_id INTEGER NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
-			question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE RESTRICT,
-			selected_option CHAR(1) NOT NULL CHECK (selected_option IN ('A','B','C','D')),
-			is_correct BOOLEAN NOT NULL DEFAULT FALSE
-		);`,
-		`CREATE INDEX IF NOT EXISTS idx_answers_submission ON answers(submission_id);`,
-		`CREATE INDEX IF NOT EXISTS idx_answers_question ON answers(question_id);`,
-	}
+// func autoMigrate(db *sql.DB) error {
+// 	stmts := []string{
+// 		`CREATE TABLE IF NOT EXISTS questions (
+// 			id SERIAL PRIMARY KEY,
+// 			question_text TEXT NOT NULL,
+// 			option_a TEXT,
+// 			option_b TEXT,
+// 			option_c TEXT,
+// 			option_d TEXT,
+// 			correct_option CHAR(1) NOT NULL CHECK (correct_option IN ('A','B','C','D'))
+// 		);`,
+// 		`CREATE TABLE IF NOT EXISTS submissions (
+// 			id SERIAL PRIMARY KEY,
+// 			username TEXT NOT NULL,
+// 			score INTEGER NOT NULL DEFAULT 0,
+// 			created_at TIMESTAMP NOT NULL DEFAULT NOW()
+// 		);`,
+// 		`CREATE TABLE IF NOT EXISTS answers (
+// 			id SERIAL PRIMARY KEY,
+// 			submission_id INTEGER NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+// 			question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE RESTRICT,
+// 			selected_option CHAR(1) NOT NULL CHECK (selected_option IN ('A','B','C','D')),
+// 			is_correct BOOLEAN NOT NULL DEFAULT FALSE
+// 		);`,
+// 		`CREATE INDEX IF NOT EXISTS idx_answers_submission ON answers(submission_id);`,
+// 		`CREATE INDEX IF NOT EXISTS idx_answers_question ON answers(question_id);`,
+// 	}
 
-	for _, s := range stmts {
-		if _, err := db.Exec(s); err != nil {
-			return err
-		}
-	}
-	return nil
+// 	for _, s := range stmts {
+// 		if _, err := db.Exec(s); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
+
+func autoMigrate(db *sql.DB) error {
+    stmts := []string{
+
+        // QUESTIONS TABLE
+        `CREATE TABLE IF NOT EXISTS questions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            question_text TEXT NOT NULL,
+            option_a TEXT,
+            option_b TEXT,
+            option_c TEXT,
+            option_d TEXT,
+            correct_option CHAR(1) NOT NULL
+        );`,
+
+        // SUBMISSIONS TABLE
+        `CREATE TABLE IF NOT EXISTS submissions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(100) NOT NULL,
+            score INT NOT NULL DEFAULT 0,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );`,
+
+        // ANSWERS TABLE
+        `CREATE TABLE IF NOT EXISTS answers (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            submission_id INT NOT NULL,
+            question_id INT NOT NULL,
+            selected_option CHAR(1) NOT NULL,
+            is_correct TINYINT(1) NOT NULL DEFAULT 0,
+            FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
+            FOREIGN KEY (question_id) REFERENCES questions(id)
+        );`,
+
+        // INDEXES (MySQL has no IF NOT EXISTS for indexes)
+        `ALTER TABLE answers ADD INDEX idx_answers_submission (submission_id);`,
+        `ALTER TABLE answers ADD INDEX idx_answers_question (question_id);`,
+    }
+
+    for _, s := range stmts {
+        if _, err := db.Exec(s); err != nil {
+            // Ignore "Duplicate key name" errors for indexes
+            if !strings.Contains(err.Error(), "Duplicate key name") {
+                return err
+            }
+        }
+    }
+    return nil
 }
+
 
 /* ==== HANDLERS ==== */
 
@@ -181,7 +231,7 @@ func createQuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.Exec(`
 		INSERT INTO questions (question_text, option_a, option_b, option_c, option_d, correct_option)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES (?, ?, ?, ?, ?, ?)
 	`,
 		q.QuestionText, q.OptionA, q.OptionB, q.OptionC, q.OptionD, strings.ToUpper(strings.TrimSpace(q.CorrectOption)),
 	)
@@ -227,90 +277,196 @@ func listQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, questions)
 }
 
+// func submitHandler(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method != http.MethodPost {
+// 		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+// 		return
+// 	}
+
+// 	token := r.URL.Query().Get("token")
+// 	username, _, err := validateToken(token)
+// 	if err != nil {
+// 		writeError(w, http.StatusUnauthorized, "Unauthorized")
+// 		return
+// 	}
+
+// 	var req SubmitRequest
+// 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+// 		writeError(w, http.StatusBadRequest, "Invalid JSON")
+// 		return
+// 	}
+// 	if len(req.Answers) == 0 {
+// 		writeError(w, http.StatusBadRequest, "No answers submitted")
+// 		return
+// 	}
+
+// 	tx, err := db.Begin()
+// 	if err != nil {
+// 		writeError(w, http.StatusInternalServerError, "Transaction error")
+// 		return
+// 	}
+// 	defer func() {
+// 		// safety rollback if not committed
+// 		_ = tx.Rollback()
+// 	}()
+
+// 	var submissionID int
+// 	if err := tx.QueryRow(`INSERT INTO submissions (username, score) VALUES (?, 0) RETURNING id`, username).Scan(&submissionID); err != nil {
+// 		writeError(w, http.StatusInternalServerError, "Insert submission failed")
+// 		return
+// 	}
+
+// 	score := 0
+// 	for _, ans := range req.Answers {
+// 		// fetch correct option
+// 		var correct string
+// 		if err := tx.QueryRow(`SELECT correct_option FROM questions WHERE id = ?`, ans.QuestionID).Scan(&correct); err != nil {
+// 			writeError(w, http.StatusBadRequest, fmt.Sprintf("Question not found: %d", ans.QuestionID))
+// 			return
+// 		}
+
+// 		sel := strings.ToUpper(strings.TrimSpace(ans.SelectedOption))
+// 		if !isValidOption(sel) {
+// 			writeError(w, http.StatusBadRequest, "Selected option must be one of A/B/C/D")
+// 			return
+// 		}
+
+// 		isCorrect := sel == correct
+// 		if isCorrect {
+// 			score++
+// 		}
+
+// 		if _, err := tx.Exec(`
+// 			INSERT INTO answers (submission_id, question_id, selected_option, is_correct)
+// 			VALUES (?, ?, ?, ?)
+// 		`, submissionID, ans.QuestionID, sel, isCorrect); err != nil {
+// 			writeError(w, http.StatusInternalServerError, "Answer insert failed")
+// 			return
+// 		}
+// 	}
+
+// 	if _, err := tx.Exec(`UPDATE submissions SET score = ? WHERE id = ?`, score, submissionID); err != nil {
+// 		writeError(w, http.StatusInternalServerError, "Score update failed")
+// 		return
+// 	}
+
+// 	if err := tx.Commit(); err != nil {
+// 		writeError(w, http.StatusInternalServerError, "Commit failed")
+// 		return
+// 	}
+
+// 	writeJSON(w, http.StatusOK, SubmitResponse{
+// 		Score:   score,
+// 		Total:   len(req.Answers),
+// 		Message: "Submission saved",
+// 	})
+// }
+
 func submitHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
+    if r.Method != http.MethodPost {
+        writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+        return
+    }
 
-	token := r.URL.Query().Get("token")
-	username, _, err := validateToken(token)
-	if err != nil {
-		writeError(w, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
+    token := r.URL.Query().Get("token")
+    username, _, err := validateToken(token)
+    if err != nil {
+        writeError(w, http.StatusUnauthorized, "Unauthorized")
+        return
+    }
 
-	var req SubmitRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid JSON")
-		return
-	}
-	if len(req.Answers) == 0 {
-		writeError(w, http.StatusBadRequest, "No answers submitted")
-		return
-	}
+    var req SubmitRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        writeError(w, http.StatusBadRequest, "Invalid JSON")
+        return
+    }
+    if len(req.Answers) == 0 {
+        writeError(w, http.StatusBadRequest, "No answers submitted")
+        return
+    }
 
-	tx, err := db.Begin()
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Transaction error")
-		return
-	}
-	defer func() {
-		// safety rollback if not committed
-		_ = tx.Rollback()
-	}()
+    tx, err := db.Begin()
+    if err != nil {
+        writeError(w, http.StatusInternalServerError, "Transaction error")
+        return
+    }
+    defer func() { _ = tx.Rollback() }()
 
-	var submissionID int
-	if err := tx.QueryRow(`INSERT INTO submissions (username, score) VALUES ($1, 0) RETURNING id`, username).Scan(&submissionID); err != nil {
-		writeError(w, http.StatusInternalServerError, "Insert submission failed")
-		return
-	}
+    // >>>> FIXED PART STARTS HERE <<<<
+    res, err := tx.Exec(
+        `INSERT INTO submissions (username, score) VALUES (?, 0)`,
+        username,
+    )
+    if err != nil {
+        log.Println("Insert submission failed:", err)
+        writeError(w, http.StatusInternalServerError, "Insert submission failed")
+        return
+    }
 
-	score := 0
-	for _, ans := range req.Answers {
-		// fetch correct option
-		var correct string
-		if err := tx.QueryRow(`SELECT correct_option FROM questions WHERE id = $1`, ans.QuestionID).Scan(&correct); err != nil {
-			writeError(w, http.StatusBadRequest, fmt.Sprintf("Question not found: %d", ans.QuestionID))
-			return
-		}
+    lastID, err := res.LastInsertId()
+    if err != nil {
+        log.Println("LastInsertId failed:", err)
+        writeError(w, http.StatusInternalServerError, "Insert submission failed")
+        return
+    }
+    submissionID := int(lastID)
+    // >>>> FIXED PART ENDS HERE <<<<
 
-		sel := strings.ToUpper(strings.TrimSpace(ans.SelectedOption))
-		if !isValidOption(sel) {
-			writeError(w, http.StatusBadRequest, "Selected option must be one of A/B/C/D")
-			return
-		}
+    score := 0
+    for _, ans := range req.Answers {
+        var correct string
+        if err := tx.QueryRow(
+            `SELECT correct_option FROM questions WHERE id = ?`,
+            ans.QuestionID,
+        ).Scan(&correct); err != nil {
+            writeError(w, http.StatusBadRequest, fmt.Sprintf("Question not found: %d", ans.QuestionID))
+            return
+        }
 
-		isCorrect := sel == correct
-		if isCorrect {
-			score++
-		}
+        sel := strings.ToUpper(strings.TrimSpace(ans.SelectedOption))
+        if !isValidOption(sel) {
+            writeError(w, http.StatusBadRequest, "Selected option must be one of A/B/C/D")
+            return
+        }
 
-		if _, err := tx.Exec(`
-			INSERT INTO answers (submission_id, question_id, selected_option, is_correct)
-			VALUES ($1, $2, $3, $4)
-		`, submissionID, ans.QuestionID, sel, isCorrect); err != nil {
-			writeError(w, http.StatusInternalServerError, "Answer insert failed")
-			return
-		}
-	}
+        isCorrect := sel == correct
+        if isCorrect {
+            score++
+        }
 
-	if _, err := tx.Exec(`UPDATE submissions SET score = $1 WHERE id = $2`, score, submissionID); err != nil {
-		writeError(w, http.StatusInternalServerError, "Score update failed")
-		return
-	}
+        if _, err := tx.Exec(`
+            INSERT INTO answers (submission_id, question_id, selected_option, is_correct)
+            VALUES (?, ?, ?, ?)`,
+            submissionID, ans.QuestionID, sel, isCorrect,
+        ); err != nil {
+            log.Println("Answer insert failed:", err)
+            writeError(w, http.StatusInternalServerError, "Answer insert failed")
+            return
+        }
+    }
 
-	if err := tx.Commit(); err != nil {
-		writeError(w, http.StatusInternalServerError, "Commit failed")
-		return
-	}
+    if _, err := tx.Exec(
+        `UPDATE submissions SET score = ? WHERE id = ?`,
+        score, submissionID,
+    ); err != nil {
+        log.Println("Score update failed:", err)
+        writeError(w, http.StatusInternalServerError, "Score update failed")
+        return
+    }
 
-	writeJSON(w, http.StatusOK, SubmitResponse{
-		Score:   score,
-		Total:   len(req.Answers),
-		Message: "Submission saved",
-	})
+    if err := tx.Commit(); err != nil {
+        log.Println("Commit failed:", err)
+        writeError(w, http.StatusInternalServerError, "Commit failed")
+        return
+    }
+
+    writeJSON(w, http.StatusOK, SubmitResponse{
+        Score:   score,
+        Total:   len(req.Answers),
+        Message: "Submission saved",
+    })
 }
+
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "time": time.Now().Format(time.RFC3339)})
@@ -322,11 +478,12 @@ func main() {
 	// Prefer env vars, fallback to literal (adjust as needed)
 	connStr := os.Getenv("PG_DSN")
 	if connStr == "" {
-		connStr = "host=localhost port=5432 user=test_user password=yourpassword dbname=test_db sslmode=disable"
+		// connStr = "host=localhost port=5432 user=ms_go_user password=yourStrongPassword123 dbname=test_go_service_db sslmode=disable"
+		connStr = "ms_go_user:yourStrongPassword123@tcp(127.0.0.1:3306)/test_go_mysql_db?parseTime=true&charset=utf8mb4&loc=Local"
 	}
 
 	var err error
-	db, err = sql.Open("postgres", connStr)
+	db, err = sql.Open("mysql", connStr)
 	if err != nil {
 		log.Fatal("DB connection failed:", err)
 	}

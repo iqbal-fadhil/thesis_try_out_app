@@ -20,7 +20,7 @@ static DB_POOL: Lazy<Pool> = Lazy::new(|| {
     cfg.port(5432);
     cfg.user("ms_rust_user"); // adjust if needed
     cfg.password("yourStrongPassword123"); // adjust
-    cfg.dbname("test_rust_service");
+    cfg.dbname("test_rust_service_db");
 
     let mgr = Manager::new(cfg, NoTls);
     Pool::builder(mgr)

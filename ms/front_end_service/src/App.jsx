@@ -2,8 +2,8 @@ import React, { createContext, useContext, useMemo, useEffect, useState } from '
 import { Routes, Route, Navigate, useNavigate, useLocation, Link } from 'react-router-dom'
 
 // === Config your microservices endpoints here ===
-const AUTH_BASE = 'http://157.15.125.7:8003'
-const TEST_BASE = 'http://157.15.125.7:8005'
+const AUTH_BASE = 'https://auth-microservices.iqbalfadhil.biz.id'
+const TEST_BASE = 'https://test-microservices.iqbalfadhil.biz.id'
 
 // === Auth context ===
 const AuthCtx = createContext(null)
@@ -72,7 +72,7 @@ function Navbar() {
   return (
     <nav className="w-full border-b bg-white/80 backdrop-blur sticky top-0 z-10">
       <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to={isAuthed ? '/dashboard' : '/'} className="font-semibold text-lg">Test Service</Link>
+        <Link to={isAuthed ? '/dashboard' : '/'} className="font-semibold text-lg">English Test Simulation</Link>
         {isAuthed && (
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-500">{user?.username || user?.email || ''}</span>
@@ -167,17 +167,17 @@ function DashboardPage() {
         <button className="px-4 py-2 rounded-xl bg-black text-white" onClick={() => nav('/test')}>Start Test</button>
       </div>
 
-      <div className="grid gap-4">
+
+
+        <div className="rounded-2xl border bg-white p-5">
+          <div className="text-sm text-gray-500 mb-2">Profile</div>
+          <div className="grid gap-4">
         {latestScore !== null && (
           <div className="rounded-2xl border bg-white p-5">
             <div className="text-sm text-gray-500 mb-1">Most recent score</div>
             <div className="text-3xl font-semibold">{latestScore}</div>
           </div>
         )}
-
-        <div className="rounded-2xl border bg-white p-5">
-          <div className="text-sm text-gray-500 mb-2">Profile</div>
-          <pre className="text-xs bg-gray-50 p-3 rounded-xl overflow-auto">{JSON.stringify(user, null, 2)}</pre>
         </div>
       </div>
     </Page>

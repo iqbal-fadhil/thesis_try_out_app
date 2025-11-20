@@ -18,7 +18,7 @@ const pool = new Pool({
   port: 5432,
   user: "ms_nodejs_user",          // change if needed
   password: "yourStrongPassword123", // change
-  database: "auth_nodejs_service",
+  database: "auth_nodejs_service_db",
 });
 
 // ---------- HELPERS ----------

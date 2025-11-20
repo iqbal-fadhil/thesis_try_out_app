@@ -142,7 +142,7 @@ func updateScoreHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    connStr := "host=localhost port=5432 user=user_user password=yourpassword dbname=user_db sslmode=disable"
+    connStr := "host=localhost port=5432 user=ms_go_user password=yourStrongPassword123 dbname=user_go_service_db sslmode=disable"
     var err error
     db, err = sql.Open("postgres", connStr)
     if err != nil {

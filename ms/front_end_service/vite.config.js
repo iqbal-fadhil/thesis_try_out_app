@@ -9,4 +9,9 @@ if (!globalThis.crypto) {
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    host: true,                     // allow external access
+    port: 5173,                     // or whatever port you use
+    allowedHosts: ['microservices.iqbalfadhil.biz.id'],
+  },
 })

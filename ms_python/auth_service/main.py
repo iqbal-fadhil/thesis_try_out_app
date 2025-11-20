@@ -12,7 +12,7 @@ DB_HOST = "127.0.0.1"
 DB_PORT = 5432
 DB_USER = "ms_python_user"                 # change if needed
 DB_PASSWORD = "yourStrongPassword123"  # change if needed
-DB_NAME = "auth_python_service"
+DB_NAME = "auth_python_service_db"
 
 POOL: Optional[asyncpg.pool.Pool] = None
 

@@ -27,14 +27,14 @@ SECRET_KEY = 'django-insecure--4o16f&&0ysw^o&2)07ptd$hm4nx)*++2_78eol%a(xls422uz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['157.15.125.7','toefl.safaracathasa.com', 'structure.englishqualification.my.id']
+ALLOWED_HOSTS = ['monolith.iqbalfadhil.biz.id']
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://157.15.125.7",
-    "http://157.15.125.7:90",  # add with port just to be safe
-    # if later you use a domain with HTTPS, add:
-    # "https://structure.englishqualification.my.id",
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://157.15.125.7",
+#     "http://157.15.125.7:90",  # add with port just to be safe
+#     # if later you use a domain with HTTPS, add:
+#     # "https://structure.englishqualification.my.id",
+# ]
 
 # Application definition
 

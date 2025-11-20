@@ -20,7 +20,7 @@ const pool = new Pool({
   port: 5432,
   user: "ms_nodejs_user",               // change if needed
   password: "yourStrongPassword123",  // change if needed
-  database: "user_nodejs_service",
+  database: "user_nodejs_service_db",
 });
 
 // Auth service (Go) base URL

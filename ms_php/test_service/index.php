@@ -16,7 +16,7 @@ $db_host = "127.0.0.1";
 $db_port = "5432";
 $db_user = "ms_php_user";            // sesuaikan jika beda
 $db_pass = "yourStrongPassword123";   // sesuaikan
-$db_name = "test_php_service";
+$db_name = "test_php_service_db";
 
 // Auth Service (PHP) base URL
 $auth_base_url = "http://127.0.0.1:8010"; // atau "http://157.15.125.7:8010"

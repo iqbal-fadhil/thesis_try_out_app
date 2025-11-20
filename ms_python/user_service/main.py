@@ -11,7 +11,7 @@ DB_HOST = "127.0.0.1"
 DB_PORT = 5432
 DB_USER = "ms_python_user"                # adjust if needed
 DB_PASSWORD = "yourStrongPassword123"   # adjust if needed
-DB_NAME = "user_python_service"
+DB_NAME = "user_python_service_db"
 
 AUTH_BASE_URL = "http://127.0.0.1:8013"  # or "http://157.15.125.7:8013"
 
