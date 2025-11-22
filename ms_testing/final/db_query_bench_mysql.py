@@ -11,15 +11,15 @@ from pymysql import OperationalError, MySQLError
 RESULTS_DIR = "results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
-ARCHITECTURE_NAME = "php_mysql"
+ARCHITECTURE_NAME = "python_mysql"
 DBMS_NAME = "mysql"
 
 # MySQL DSN - sesuaikan sebelum run
 DB_HOST = "127.0.0.1"
 DB_PORT = 3306
-DB_USER = "ms_php_user"
+DB_USER = "ms_python_user"
 DB_PASS = "yourStrongPassword123"
-DB_NAME = "test_php_mysql_db"
+DB_NAME = "test_python_service_db"
 
 # Jika True, script akan mencoba CREATE DATABASE jika tidak ditemukan.
 AUTO_CREATE_DB = False

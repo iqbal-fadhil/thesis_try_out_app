@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS test_php_service_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE test_php_service_db;
+CREATE DATABASE IF NOT EXISTS test_python_service_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE test_python_service_db;
 
 CREATE TABLE IF NOT EXISTS questions (
     id INT AUTO_INCREMENT PRIMARY KEY,
