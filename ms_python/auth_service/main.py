@@ -5,6 +5,7 @@ import asyncpg
 import bcrypt
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 # ---------------- CONFIG ----------------
 
@@ -18,6 +19,26 @@ POOL: Optional[asyncpg.pool.Pool] = None
 
 app = FastAPI(title="Python FastAPI Auth Service")
 
+
+
+# allowed origins — use explicit origin(s), not '*' for production if you use credentials
+FRONTEND_ORIGINS = [
+    "https://microservices.iqbalfadhil.biz.id",
+    # add local dev urls if needed:
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app = FastAPI(title="Python FastAPI Auth Service")
+
+# Add this block immediately after app = FastAPI(...)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=FRONTEND_ORIGINS,   # exact origins
+    allow_credentials=True,           # True if you use cookies or Authorization header with credentials
+    allow_methods=["*"],              # allow POST, GET, OPTIONS, etc.
+    allow_headers=["*"],              # allow Content-Type, Authorization, X-Whatever
+)
 
 # ---------------- MODELS ----------------
 

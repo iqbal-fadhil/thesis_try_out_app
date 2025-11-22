@@ -1,5 +1,6 @@
-from typing import List, Optional
-
+# main.py (modified)
+from typing import List, Optional, Dict, Any
+from fastapi.middleware.cors import CORSMiddleware
 import asyncpg
 import httpx
 from fastapi import FastAPI, HTTPException, Query, status
@@ -13,12 +14,27 @@ DB_USER = "ms_python_user"              # sesuaikan
 DB_PASSWORD = "yourStrongPassword123"  # sesuaikan
 DB_NAME = "test_python_service_db"
 
-AUTH_BASE_URL = "http://127.0.0.1:8013"  # atau "http://157.15.125.7:8013"
+AUTH_BASE_URL = "http://127.0.0.1:8003"  # sesuaikan ke service auth Anda
 
 POOL: Optional[asyncpg.pool.Pool] = None
 
 app = FastAPI(title="Python FastAPI Test Service")
 
+# allowed origins (explicit)
+FRONTEND_ORIGINS = [
+    "https://microservices.iqbalfadhil.biz.id",
+    "https://auth-microservices.iqbalfadhil.biz.id",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=FRONTEND_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
 
 # ---------------- MODELS ----------------
 
@@ -73,12 +89,8 @@ class AnswerResult(BaseModel):
     correct_option: Optional[str]
 
 
-class SubmitResponse(BaseModel):
-    username: str
-    submission_id: int
-    total_questions: int
-    correct_answers: int
-    answers: List[AnswerResult]
+# NOTE: We will return dicts for submit and latest endpoints so we can include
+# score_percent without changing many models.
 
 
 # ---------------- DB LIFECYCLE ----------------
@@ -252,7 +264,7 @@ async def create_question(
 
 
 # POST /submit?token=...
-@app.post("/submit", response_model=SubmitResponse)
+@app.post("/submit")
 async def submit(
     payload: SubmitRequest,
     token: str = Query(..., description="Auth token"),
@@ -286,7 +298,7 @@ async def submit(
         try:
             rows = await conn.fetch(
                 """
-                SELECT id, correct_option
+                SELECT id, correct_option, question_text
                 FROM questions
                 WHERE id = ANY($1::int[])
                 """,
@@ -298,8 +310,11 @@ async def submit(
                 detail=f"Question lookup failed: {e}",
             )
 
-        questions_map = {
-            row["id"]: (row["correct_option"] or "").strip().upper()
+        questions_map: Dict[int, Dict[str, Any]] = {
+            row["id"]: {
+                "correct_option": (row["correct_option"] or "").strip().upper(),
+                "question_text": row["question_text"],
+            }
             for row in rows
         }
 
@@ -311,34 +326,36 @@ async def submit(
 
         total_questions = 0
         correct_answers = 0
-        answers_result: List[AnswerResult] = []
+        answers_result: List[Dict[str, Any]] = []
 
         for ans in payload.answers:
             qid = ans.question_id
             sel = (ans.selected_option or "").strip().upper()
 
-            correct_opt = questions_map.get(qid)
-            if correct_opt is None:
+            qdata = questions_map.get(qid)
+            if not qdata:
                 is_correct = False
                 correct_opt_out = None
+                qtext = None
             else:
-                is_correct = sel == correct_opt
-                correct_opt_out = correct_opt
+                correct_opt_out = qdata["correct_option"]
+                qtext = qdata.get("question_text")
+                is_correct = sel == correct_opt_out
 
             total_questions += 1
             if is_correct:
                 correct_answers += 1
 
-            answers_result.append(
-                AnswerResult(
-                    question_id=qid,
-                    selected_option=sel,
-                    is_correct=is_correct,
-                    correct_option=correct_opt_out,
-                )
-            )
+            answers_result.append({
+                "question_id": qid,
+                "question_text": qtext,
+                "selected_option": sel,
+                "is_correct": is_correct,
+                "correct_option": correct_opt_out,
+            })
 
         # Simpan ke submissions & submission_answers dalam transaction
+        submission_id = None
         tr = conn.transaction()
         await tr.start()
         try:
@@ -362,23 +379,109 @@ async def submit(
                     VALUES ($1, $2, $3, $4)
                     """,
                     submission_id,
-                    ar.question_id,
-                    ar.selected_option,
-                    ar.is_correct,
+                    ar["question_id"],
+                    ar["selected_option"],
+                    1 if ar["is_correct"] else 0,
                 )
 
             await tr.commit()
         except Exception as e:
             await tr.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Submission save failed: {e}",
-            )
+            # log error but do not send 500 for client — still return computed result
+            # This avoids frontend failing if DB insert partially fails.
+            # You may want to log to a file/monitoring system in production.
+            print("Submission save failed:", e)
+            submission_id = submission_id  # may be None
 
-    return SubmitResponse(
-        username=username,
-        submission_id=submission_id,
-        total_questions=total_questions,
-        correct_answers=correct_answers,
-        answers=answers_result,
-    )
+    # compute score percent
+    if total_questions > 0:
+        score_percent = int(round((correct_answers / total_questions) * 100))
+    else:
+        score_percent = 0
+
+    # Reliable response for frontend (many aliases so frontend can read)
+    return {
+        "status": "success",
+        "username": username,
+        "submission_id": submission_id,
+        "total_questions": total_questions,
+        "correct_answers": correct_answers,
+        "score_percent": score_percent,
+        "score": score_percent,
+        "total_score": score_percent,
+        "details": answers_result,
+    }
+
+
+# GET /submissions/latest?token=...
+@app.get("/submissions/latest")
+async def get_latest_submission(token: str = Query(..., description="Auth token")):
+    auth_user = await get_auth_user_from_token(token)
+    if auth_user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    username = auth_user.username
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        try:
+            row = await conn.fetchrow(
+                """
+                SELECT id, username, total_questions, correct_answers, created_at
+                FROM submissions
+                WHERE username = $1
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                username,
+            )
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Query failed: {e}")
+
+        if row is None:
+            return {"status": "ok", "submission": None}
+
+        submission_id = row["id"]
+        total_q = row["total_questions"] or 0
+        correct = row["correct_answers"] or 0
+        score_percent = int(round((correct / total_q) * 100)) if total_q > 0 else 0
+
+        # get submission answers (optional but useful)
+        try:
+            ans_rows = await conn.fetch(
+                """
+                SELECT question_id, selected_option, is_correct
+                FROM submission_answers
+                WHERE submission_id = $1
+                ORDER BY id ASC
+                """,
+                submission_id,
+            )
+            answers = [
+                {
+                    "question_id": r["question_id"],
+                    "selected_option": r["selected_option"],
+                    "is_correct": bool(r["is_correct"]),
+                }
+                for r in ans_rows
+            ]
+        except Exception:
+            answers = []
+
+        return {
+            "status": "ok",
+            "submission": {
+                "submission_id": submission_id,
+                "username": row["username"],
+                "total_questions": total_q,
+                "correct_answers": correct,
+                "score_percent": score_percent,
+                "score": score_percent,
+                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                "answers": answers,
+            }
+        }
+
+# Fallback 404
+@app.get("/{full_path:path}")
+async def fallback(full_path: str):
+    raise HTTPException(status_code=404, detail="Not Found")

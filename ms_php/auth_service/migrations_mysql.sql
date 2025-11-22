@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS auth_php_service_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE auth_php_service_db;
+CREATE DATABASE IF NOT EXISTS auth_python_service_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE auth_python_service_db;
 
 CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
