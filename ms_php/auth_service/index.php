@@ -2,8 +2,24 @@
 // =======================================
 // Minimal PHP Microservice for Auth
 // Port example: 8010
-// Run: php -S 0.0.0.0:8010 index.php
+// Run: php -S 0.0.0.0:8003 index.php
 // =======================================
+
+// ---- CORS (add this block) ----
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '*'; 
+// kalau mau lebih ketat, bisa pakai:
+// if ($origin === 'https://microservices.iqbalfadhil.biz.id') { ... }
+
+header("Access-Control-Allow-Origin: $origin");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Credentials: true");
+
+// Preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 // ---------- CONFIG ----------
 $db_host = "127.0.0.1";

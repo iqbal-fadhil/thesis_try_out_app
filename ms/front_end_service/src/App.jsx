@@ -222,28 +222,61 @@ function TestPage() {
     setIndex(i => Math.min(i + 1, total - 1))
   }
 
+  // const handleSubmit = async () => {
+  //   if (q && !answers[q.id]) { alert('Please select an option for this question.'); return }
+  //   const payload = {
+  //     answers: Object.entries(answers).map(([question_id, selected_option]) => ({
+  //       question_id: Number(question_id),
+  //       selected_option,
+  //     }))
+  //   }
+  //   try {
+  //     const r = await fetch(`${TEST_BASE}/submit?token=${encodeURIComponent(token)}`, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify(payload),
+  //     })
+  //     if (!r.ok) throw new Error(`Submit failed: ${r.status}`)
+  //     const data = await r.json()
+  //     const score = data.score ?? data.total_score ?? data.result?.score ?? 0
+  //     nav('/dashboard', { replace: true, state: { score } })
+  //   } catch (e) {
+  //     alert(e.message || 'Failed to submit answers')
+  //   }
+  // }
+
   const handleSubmit = async () => {
-    if (q && !answers[q.id]) { alert('Please select an option for this question.'); return }
-    const payload = {
-      answers: Object.entries(answers).map(([question_id, selected_option]) => ({
-        question_id: Number(question_id),
-        selected_option,
-      }))
-    }
-    try {
-      const r = await fetch(`${TEST_BASE}/submit?token=${encodeURIComponent(token)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!r.ok) throw new Error(`Submit failed: ${r.status}`)
-      const data = await r.json()
-      const score = data.score ?? data.total_score ?? data.result?.score ?? 0
-      nav('/dashboard', { replace: true, state: { score } })
-    } catch (e) {
-      alert(e.message || 'Failed to submit answers')
-    }
+  if (q && !answers[q.id]) { alert('Please select an option for this question.'); return }
+  const payload = {
+    answers: Object.entries(answers).map(([question_id, selected_option]) => ({
+      question_id: Number(question_id),
+      selected_option,
+    }))
   }
+  try {
+    const r = await fetch(`${TEST_BASE}/submit?token=${encodeURIComponent(token)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!r.ok) throw new Error(`Submit failed: ${r.status}`)
+    const data = await r.json()
+
+    // 👇 GANTI baris ini
+    // const score = data.score ?? data.total_score ?? data.result?.score ?? 0
+    const score =
+      data.score_percent ??
+      data.score ??
+      data.total_score ??
+      data.result?.score ??
+      0
+
+    nav('/dashboard', { replace: true, state: { score } })
+  } catch (e) {
+    alert(e.message || 'Failed to submit answers')
+  }
+}
+
 
   if (loading) return <Page><div className="text-gray-500">Loading questions…</div></Page>
   if (error) return <Page><div className="text-red-600">{error}</div></Page>
