@@ -8,7 +8,7 @@ from datetime import datetime
 RESULTS_DIR = "results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
-ARCHITECTURE_NAME = "python_mysql"  # samakan dengan load_full_flow.py untuk sinkron analisis
+ARCHITECTURE_NAME = "nodejs_postgres"  # samakan dengan load_full_flow.py untuk sinkron analisis
 
 # substring nama proses yang ingin dilacak
 TARGET_PROCESSES = ["auth_service", "test_service", "postgres"]  # sesuaikan nama binary/command

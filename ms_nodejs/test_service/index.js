@@ -1,5 +1,5 @@
-// ==========================================
-// Node.js Test Service (single file)
+// index.js
+// Node.js Test Service (single file) with CORS
 // Endpoints:
 //  GET  /health
 //  GET  /questions
@@ -13,22 +13,50 @@ const url = require("url");
 const { Pool } = require("pg");
 
 // ---------- CONFIG ----------
-const PORT = 8031;
+const PORT = 8005;
 
 const pool = new Pool({
   host: "127.0.0.1",
   port: 5432,
   user: "ms_nodejs_user",               // sesuaikan kalau beda
-  password: "yourStrongPassword123",  // sesuaikan
+  password: "yourStrongPassword123",    // sesuaikan
   database: "test_nodejs_service_db",
 });
 
-// Auth service (Go)
-const AUTH_BASE_URL = "http://127.0.0.1:8011"; // atau "http://157.15.125.7:8011"
+// Auth service (Go / other)
+const AUTH_BASE_URL = "http://127.0.0.1:8003"; // sesuaikan
+
+// ---------- CORS CONFIG ----------
+const ALLOWED_ORIGINS = [
+  "https://microservices.iqbalfadhil.biz.id",
+  "https://auth-microservices.iqbalfadhil.biz.id",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+
+// helper: set CORS headers on response based on request origin
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  // if you want to allow any origin for dev only, uncomment next line (NOT for production)
+  // res.setHeader("Access-Control-Allow-Origin", "*");
+
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  // optional: expose headers to client
+  res.setHeader("Access-Control-Expose-Headers", "Content-Type");
+}
 
 // ---------- HELPERS ----------
 function sendJson(res, statusCode, data) {
-  res.writeHead(statusCode, { "Content-Type": "application/json" });
+  // do not overwrite CORS headers already set
+  res.statusCode = statusCode;
+  if (!res.getHeader("Content-Type")) {
+    res.setHeader("Content-Type", "application/json");
+  }
   res.end(JSON.stringify(data));
 }
 
@@ -37,6 +65,11 @@ function parseBody(req) {
     let body = "";
     req.on("data", chunk => {
       body += chunk.toString();
+      // protect: avoid very large bodies
+      if (body.length > 1e6) {
+        req.connection.destroy();
+        reject(new Error("Payload too large"));
+      }
     });
     req.on("end", () => {
       if (!body) return resolve({});
@@ -58,10 +91,7 @@ function getUserFromToken(token) {
   return new Promise((resolve) => {
     if (!token) return resolve(null);
 
-    const targetUrl = `${AUTH_BASE_URL}/api/auth/me?token=${encodeURIComponent(
-      token
-    )}`;
-
+    const targetUrl = `${AUTH_BASE_URL}/api/auth/me?token=${encodeURIComponent(token)}`;
     const parsed = url.parse(targetUrl);
     const options = {
       hostname: parsed.hostname,
@@ -100,6 +130,16 @@ function getUserFromToken(token) {
 
 // ---------- SERVER ----------
 const server = http.createServer(async (req, res) => {
+  // set CORS headers for all responses
+  setCorsHeaders(req, res);
+
+  // handle preflight quickly before anything else (no DB)
+  if (req.method === "OPTIONS") {
+    // No content for preflight
+    res.statusCode = 204;
+    return res.end();
+  }
+
   const parsedUrl = url.parse(req.url, true);
   const path = (parsedUrl.pathname || "/").replace(/^\/+|\/+$/g, "");
   const method = req.method;

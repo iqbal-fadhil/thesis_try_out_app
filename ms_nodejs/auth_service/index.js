@@ -1,7 +1,7 @@
 // ==========================================
 // Minimal Node.js Auth Microservice
 // Run: node index.js
-// Will listen on 0.0.0.0:8011
+// Will listen on 0.0.0.0:8003
 // ==========================================
 
 const http = require("http");
@@ -11,7 +11,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
 // ---------- CONFIG ----------
-const PORT = 8011;
+const PORT = 8003;
 
 const pool = new Pool({
   host: "127.0.0.1",
@@ -50,10 +50,43 @@ function generateToken() {
 }
 
 // ---------- ROUTER ----------
+
+const allowedOrigins = [
+  "https://microservices.iqbalfadhil.biz.id",
+  "https://auth-microservices.iqbalfadhil.biz.id",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000"
+];
+
 const server = http.createServer(async (req, res) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS, PUT, DELETE"
+  );
+
+  // Handle OPTIONS preflight
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    return res.end();
+  }
+
+  // ---- existing router code here ----
   const parsedUrl = url.parse(req.url, true);
   const path = parsedUrl.pathname;
   const method = req.method;
+
 
   // HEALTHCHECK (no DB)
   if (path === "/healthz" && method === "GET") {

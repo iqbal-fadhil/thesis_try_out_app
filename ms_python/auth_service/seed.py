@@ -5,9 +5,9 @@ import bcrypt
 # ---------------- CONFIG ----------------
 DB_HOST = "127.0.0.1"
 DB_PORT = 5432
-DB_USER = "ms_python_user"
+DB_USER = "ms_nodejs_user"
 DB_PASSWORD = "yourStrongPassword123"
-DB_NAME = "auth_python_service_db"
+DB_NAME = "auth_nodejs_service_db"
 
 # ---------------- PASSWORD HASH ----------------
 def hash_password(password: str) -> str:
