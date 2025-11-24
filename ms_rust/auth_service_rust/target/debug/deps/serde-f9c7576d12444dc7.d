@@ -1,0 +1,14 @@
+/home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/deps/serde-f9c7576d12444dc7.d: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/build/serde-5e55967fd4a49097/out/private.rs
+
+/home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/deps/libserde-f9c7576d12444dc7.rlib: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/build/serde-5e55967fd4a49097/out/private.rs
+
+/home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/deps/libserde-f9c7576d12444dc7.rmeta: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/build/serde-5e55967fd4a49097/out/private.rs
+
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/build/serde-5e55967fd4a49097/out/private.rs:
+
+# env-dep:OUT_DIR=/home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/build/serde-5e55967fd4a49097/out

@@ -1,0 +1,10 @@
+/home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/deps/deadpool_postgres-3d322021538b3f6f.d: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/config.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/generic_client.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/../README.md
+
+/home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/deps/libdeadpool_postgres-3d322021538b3f6f.rlib: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/config.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/generic_client.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/../README.md
+
+/home/user/Documents/thesis/thesis_try_out_app/ms_rust/auth_service_rust/target/debug/deps/libdeadpool_postgres-3d322021538b3f6f.rmeta: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/config.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/generic_client.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/../README.md
+
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/lib.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/config.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/generic_client.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/deadpool-postgres-0.10.5/src/../README.md:

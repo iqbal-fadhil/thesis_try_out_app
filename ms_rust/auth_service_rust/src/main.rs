@@ -9,21 +9,28 @@ use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tokio_postgres::{Config, NoTls};
 use uuid::Uuid;
-use tokio::net::TcpListener;
+use std::env;
+use axum::http::HeaderValue;
+use axum::http::Method;
+use tower_http::cors::CorsLayer;
+// use bcrypt::BcryptError;
 
+// If you uploaded a screenshot and want to reference the local path, here's the path saved earlier.
+// The container/local path (from your upload) is:
+// const UPLOADED_IMAGE_PATH: &str = "/mnt/data/Screen Shot 2025-11-24 at 13.18.51.png";
 
 static DB_POOL: Lazy<Pool> = Lazy::new(|| {
-    // Adjust these to match your PostgreSQL settings
+    // Read DB config from environment, fallback to defaults
     let mut cfg = Config::new();
-    cfg.host("127.0.0.1");
-    cfg.port(5432);
-    cfg.user("ms_rust_user"); // change if needed
-    cfg.password("yourStrongPassword123"); // change
-    cfg.dbname("auth_rust_service_db");
+    cfg.host(&env::var("PGHOST").unwrap_or_else(|_| "127.0.0.1".to_string()));
+    cfg.port(env::var("PGPORT").ok().and_then(|p| p.parse().ok()).unwrap_or(5432));
+    cfg.user(&env::var("PGUSER").unwrap_or_else(|_| "ms_rust_user".to_string()));
+    cfg.password(&env::var("PGPASSWORD").unwrap_or_else(|_| "yourStrongPassword123".to_string()));
+    cfg.dbname(&env::var("PGDATABASE").unwrap_or_else(|_| "auth_rust_service_db".to_string()));
 
     let mgr = Manager::new(cfg, NoTls);
     Pool::builder(mgr)
-        .max_size(16)
+        .max_size(env::var("DB_POOL_MAX").ok().and_then(|v| v.parse().ok()).unwrap_or(16))
         .build()
         .expect("Failed to build DB pool")
 });
@@ -434,34 +441,23 @@ async fn get_me(
 
 // --------- MAIN ---------
 
-// #[tokio::main]
-// async fn main() {
-//     let state = AppState {
-//         pool: DB_POOL.clone(),
-//     };
-
-//     let app = Router::new()
-//         .route("/healthz", get(healthz))
-//         .route("/api/auth/register", post(register))
-//         .route("/api/auth/login", post(login))
-//         .route("/api/auth/validate", get(validate_token))
-//         .route("/api/auth/me", get(get_me))
-//         .with_state(state);
-
-//     let addr = SocketAddr::from(([0, 0, 0, 0], 8012));
-//     println!("Rust auth service running on http://0.0.0.0:8012");
-
-//     axum::Server::bind(&addr)
-//         .serve(app.into_make_service())
-//         .await
-//         .unwrap();
-// }
-
 #[tokio::main]
 async fn main() {
     let state = AppState {
         pool: DB_POOL.clone(),
     };
+
+    // CORS configuration
+    let cors = CorsLayer::new()
+        .allow_origin([
+            "https://microservices.iqbalfadhil.biz.id".parse::<HeaderValue>().unwrap(),
+            "https://auth-microservices.iqbalfadhil.biz.id".parse::<HeaderValue>().unwrap(),
+            "http://localhost:3000".parse::<HeaderValue>().unwrap(),
+            "http://127.0.0.1:3000".parse::<HeaderValue>().unwrap(),
+        ])
+        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+        .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION])
+        .allow_credentials(true);
 
     let app = Router::new()
         .route("/healthz", get(healthz))
@@ -469,14 +465,20 @@ async fn main() {
         .route("/api/auth/login", post(login))
         .route("/api/auth/validate", get(validate_token))
         .route("/api/auth/me", get(get_me))
-        .with_state(state);
+        .with_state(state)
+        .layer(cors);
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8012));
-    println!("Rust auth service running on http://0.0.0.0:8012");
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8003));
+    println!("Rust auth service running on http://0.0.0.0:8003");
+    // axum::Server::bind(&addr)
+    //     .serve(app.into_make_service())
+    //     .await
+    //     .unwrap();
 
-    let listener = TcpListener::bind(addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
 
     axum::serve(listener, app)
         .await
         .unwrap();
+
 }
