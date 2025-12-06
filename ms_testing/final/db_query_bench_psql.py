@@ -9,11 +9,11 @@ from statistics import mean
 RESULTS_DIR = "results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
-ARCHITECTURE_NAME = "nodejs_postgres"  # jawaban di grafik nanti bisa dipisah per kombinasi
+ARCHITECTURE_NAME = "python_postgresql"  # jawaban di grafik nanti bisa dipisah per kombinasi
 DBMS_NAME = "postgresql"           # atau "mysql", dll
 
 # Sesuaikan DSN untuk varian ini
-DSN = "host=localhost port=5432 user=ms_nodejs_user password=yourStrongPassword123 dbname=test_nodejs_service_db sslmode=disable"
+DSN = "host=localhost port=5432 user=ms_python_user password=yourStrongPassword123 dbname=test_python_service_db sslmode=disable"
 
 TEST_QUERY = "SELECT id, question_text FROM questions LIMIT 10;"
 

@@ -3,8 +3,8 @@
 
 // === DATABASE CONFIG ===
 $DB_HOST = "127.0.0.1";
-$DB_NAME = "auth_python_service_db";   // sesuaikan dengan DB kamu
-$DB_USER = "ms_python_user";           // user MySQL
+$DB_NAME = "auth_php_service_db";   // sesuaikan dengan DB kamu
+$DB_USER = "ms_php_user";           // user MySQL
 $DB_PASS = "yourStrongPassword123"; // password MySQL
 
 // === DB CONNECTION ===

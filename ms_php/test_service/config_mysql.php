@@ -3,8 +3,8 @@
 
 // === DATABASE CONFIG ===
 $DB_HOST = "127.0.0.1";
-$DB_NAME = "test_python_service_db";
-$DB_USER = "ms_python_user";
+$DB_NAME = "test_php_service_db";
+$DB_USER = "ms_php_user";
 $DB_PASS = "yourStrongPassword123";
 
 // === AUTH SERVICE CONFIG ===

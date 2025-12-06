@@ -11,15 +11,15 @@ from pymysql import OperationalError, MySQLError
 RESULTS_DIR = "results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
-ARCHITECTURE_NAME = "python_mysql"
+ARCHITECTURE_NAME = "go_mysql"
 DBMS_NAME = "mysql"
 
 # MySQL DSN - sesuaikan sebelum run
 DB_HOST = "127.0.0.1"
 DB_PORT = 3306
-DB_USER = "ms_nodejs_user"
-DB_PASS = "StrongPassw0rd!"
-DB_NAME = "test_nodejs_service_db"
+DB_USER = "ms_go_user"
+DB_PASS = "yourStrongPassword123"
+DB_NAME = "test_go_mysql_db"
 
 # Jika True, script akan mencoba CREATE DATABASE jika tidak ditemukan.
 AUTO_CREATE_DB = False

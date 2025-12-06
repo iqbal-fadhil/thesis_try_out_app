@@ -14,7 +14,7 @@ class Command(BaseCommand):
         # Create users and associated user profiles
         self.stdout.write('Seeding users...')
         users_data = [
-            {'username':'john', 'password': 'user123', 'email': 'john@mail.com'},
+            {'username':'student1', 'password': 'Student123!', 'email': 'student@mail.com'},
 
             # Add more user data as needed
         ]

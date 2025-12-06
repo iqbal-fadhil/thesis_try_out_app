@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure--4o16f&&0ysw^o&2)07ptd$hm4nx)*++2_78eol%a(xls422uz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['monolith.iqbalfadhil.biz.id']
+ALLOWED_HOSTS = ['monolithic.iqbalfadhil.biz.id']
 
 # CSRF_TRUSTED_ORIGINS = [
 #     "http://157.15.125.7",
@@ -38,6 +38,12 @@ ALLOWED_HOSTS = ['monolith.iqbalfadhil.biz.id']
 
 # Application definition
 
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://monolithic.iqbalfadhil.biz.id",
+    # add other hostnames you might use, for example:
+    # "https://www.yourdomain.example",
+]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

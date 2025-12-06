@@ -18,11 +18,11 @@ echo "=== Auth Service Seeder ===" . PHP_EOL;
 // List of users to insert
 $users = [
     [
-        "username" => "student1",
+        "username" => "student2",
         "password" => "Student123!",
-        "email" => "student1@example.com",
+        "email" => "student2@example.com",
         "first_name" => "Student",
-        "last_name" => "One",
+        "last_name" => "Two",
         "is_staff" => 0
     ]
 ];

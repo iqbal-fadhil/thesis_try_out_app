@@ -154,9 +154,83 @@ func isValidOption(opt string) bool {
 // 	return nil
 // }
 
-func autoMigrate(db *sql.DB) error {
-    stmts := []string{
+// func autoMigrate(db *sql.DB) error {
+//     stmts := []string{
 
+//         // QUESTIONS TABLE
+//         `CREATE TABLE IF NOT EXISTS questions (
+//             id INT AUTO_INCREMENT PRIMARY KEY,
+//             question_text TEXT NOT NULL,
+//             option_a TEXT,
+//             option_b TEXT,
+//             option_c TEXT,
+//             option_d TEXT,
+//             correct_option CHAR(1) NOT NULL
+//         );`,
+
+//         // SUBMISSIONS TABLE
+//         `CREATE TABLE IF NOT EXISTS submissions (
+//             id INT AUTO_INCREMENT PRIMARY KEY,
+//             username VARCHAR(100) NOT NULL,
+//             score INT NOT NULL DEFAULT 0,
+//             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+//         );`,
+
+//         // ANSWERS TABLE
+//         `CREATE TABLE IF NOT EXISTS answers (
+//             id INT AUTO_INCREMENT PRIMARY KEY,
+//             submission_id INT NOT NULL,
+//             question_id INT NOT NULL,
+//             selected_option CHAR(1) NOT NULL,
+//             is_correct TINYINT(1) NOT NULL DEFAULT 0,
+//             FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
+//             FOREIGN KEY (question_id) REFERENCES questions(id)
+//         );`,
+
+//         // INDEXES (MySQL has no IF NOT EXISTS for indexes)
+//         `ALTER TABLE answers ADD INDEX idx_answers_submission (submission_id);`,
+//         `ALTER TABLE answers ADD INDEX idx_answers_question (question_id);`,
+//     }
+
+//     for _, s := range stmts {
+//         if _, err := db.Exec(s); err != nil {
+//             // Ignore "Duplicate key name" errors for indexes
+//             if !strings.Contains(err.Error(), "Duplicate key name") {
+//                 return err
+//             }
+//         }
+//     }
+//     return nil
+// }
+
+// ensureIndex creates the index only if it does not already exist.
+func ensureIndex(db *sql.DB, tableName, indexName string, columns []string) error {
+    var cnt int
+    q := `
+SELECT COUNT(*) 
+FROM INFORMATION_SCHEMA.STATISTICS
+WHERE table_schema = DATABASE()
+  AND table_name = ?
+  AND index_name = ?`
+    if err := db.QueryRow(q, tableName, indexName).Scan(&cnt); err != nil {
+        return fmt.Errorf("check index existence: %w", err)
+    }
+    if cnt > 0 {
+        return nil // already exists
+    }
+
+    // Build column list (no user input here)
+    cols := strings.Join(columns, ",")
+    stmt := fmt.Sprintf("ALTER TABLE `%s` ADD INDEX `%s` (%s);", tableName, indexName, cols)
+    if _, err := db.Exec(stmt); err != nil {
+        return fmt.Errorf("create index %s on %s: %w", indexName, tableName, err)
+    }
+    return nil
+}
+
+func autoMigrate(db *sql.DB) error {
+    // Create tables (idempotent)
+    stmts := []string{
         // QUESTIONS TABLE
         `CREATE TABLE IF NOT EXISTS questions (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -166,7 +240,7 @@ func autoMigrate(db *sql.DB) error {
             option_c TEXT,
             option_d TEXT,
             correct_option CHAR(1) NOT NULL
-        );`,
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
         // SUBMISSIONS TABLE
         `CREATE TABLE IF NOT EXISTS submissions (
@@ -174,7 +248,7 @@ func autoMigrate(db *sql.DB) error {
             username VARCHAR(100) NOT NULL,
             score INT NOT NULL DEFAULT 0,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );`,
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
         // ANSWERS TABLE
         `CREATE TABLE IF NOT EXISTS answers (
@@ -183,23 +257,31 @@ func autoMigrate(db *sql.DB) error {
             question_id INT NOT NULL,
             selected_option CHAR(1) NOT NULL,
             is_correct TINYINT(1) NOT NULL DEFAULT 0,
-            FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
-            FOREIGN KEY (question_id) REFERENCES questions(id)
-        );`,
-
-        // INDEXES (MySQL has no IF NOT EXISTS for indexes)
-        `ALTER TABLE answers ADD INDEX idx_answers_submission (submission_id);`,
-        `ALTER TABLE answers ADD INDEX idx_answers_question (question_id);`,
+            CONSTRAINT fk_answers_submission FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
+            CONSTRAINT fk_answers_question FOREIGN KEY (question_id) REFERENCES questions(id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
     }
 
     for _, s := range stmts {
         if _, err := db.Exec(s); err != nil {
-            // Ignore "Duplicate key name" errors for indexes
-            if !strings.Contains(err.Error(), "Duplicate key name") {
-                return err
-            }
+            // If table exists but has different structure, this will error.
+            // We return the error so you'll see it and can migrate DB manually.
+            return fmt.Errorf("exec statement failed: %w", err)
         }
     }
+
+    // Ensure indexes (check existence first to avoid IF NOT EXISTS syntax)
+    if err := ensureIndex(db, "answers", "idx_answers_submission", []string{"submission_id"}); err != nil {
+        // If index creation fails, return error so it's visible
+        return err
+    }
+    if err := ensureIndex(db, "answers", "idx_answers_question", []string{"question_id"}); err != nil {
+        return err
+    }
+
+    // If you have other indexes (example users), add here:
+    // if err := ensureIndex(db, "users", "idx_users_username", []string{"username"}); err != nil { return err }
+
     return nil
 }
 
